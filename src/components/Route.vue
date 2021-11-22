@@ -1,7 +1,9 @@
 <template>
     <div>
-        {{routeName}}
-        {{country}}
+        <div>
+            <button>去程</button>
+            <button>回程</button>
+        </div>
     </div>
 </template>
 
@@ -18,6 +20,9 @@ export default {
 
         const routeName = ref<any>(route.params.routeName)
         const country = ref(store.state.country)
+        const go = ref('')
+        const back = ref('')
+        const filterData = ref([])
 
         function getAuthorizationHeader() {
             let AppID = import.meta.env.VITE_APP_ID;
@@ -33,24 +38,38 @@ export default {
         }
 
         function getEstimatedBus(country:string, routeName:string) {
-            console.log('11', country)
-            console.log('22', routeName)
-            // fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/${country}/${routeName}?&format=JSON`,{
-            //     headers: getAuthorizationHeader()
-            // })
-            // .then(res => res.json())
-            // .then(data => {
-            //     console.log(data)
-            // })
+            fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/${country}/${routeName}?&format=JSON`,{
+                headers: getAuthorizationHeader()
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+            })
+        }
+
+        function getBusStop(country:string, routeName:string) {
+            fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/${country}/${routeName}?&format=JSON`,{
+                headers: getAuthorizationHeader()
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                filterData.value = data.filter(item => item.RouteName.Zh_tw == routeName)
+                console.log(filterData.value)
+            })
         }
 
         onMounted(() => {
-            getEstimatedBus(country, routeName)
+            getEstimatedBus(country.value, routeName.value);
+            getBusStop(country.value, routeName.value);
         })
 
         return {
             routeName,
-            country
+            country,
+            go,
+            back,
+            filterData
         }
     }
 }

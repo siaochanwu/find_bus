@@ -53,6 +53,13 @@ export default {
             StopID: string,
             StationID: string
         }
+        interface depart {
+            DepartureStopNameZh: string,
+            DestinationStopNameZh: string,
+            RouteName: {
+                Zh_tw: string
+            }
+        }
 
         const route = useRoute()
         const store = useStore()
@@ -98,29 +105,40 @@ export default {
                 console.log(data)
                 const busData = <info[]>data
                 filterData.value = busData.filter(item => item.RouteName.Zh_tw == routeName)
-                const aaa = filterData.value.forEach(item => {
+                filterData.value.forEach(item => {
                     //0:去程 1:返程
                     if (item.Direction == 0) {
                         for (let i = 0; i < item.Stops.length; i++) {
                             go.value.push(item.Stops[i])
-                            goWhere.value = item.Stops[i].StopName.Zh_tw
-                            console.log(goWhere.value)
                         }
                     } else {
                         for (let i = 0; i < item.Stops.length; i++) {
                             back.value.push(item.Stops[i])
-                            backWhere.value = item.Stops[i].StopName.Zh_tw
-                            console.log(backWhere.value)
                         }
                     }
                 })
-                console.log('go', go.value)
+            })
+        }
+
+        //取得起始站名
+        function getStartEndName(country:string, routeName:string) {
+            fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/Route/City/${country}/${routeName}?&format=JSON`,{
+                headers: getAuthorizationHeader()
+            })
+            .then(res => res.json())
+            .then(data => {
+                // console.log(data)
+                const busData = <depart[]>data
+                const departData = busData.filter(item => item.RouteName.Zh_tw == routeName)
+                goWhere.value = departData[0].DepartureStopNameZh
+                backWhere.value = departData[0].DestinationStopNameZh
             })
         }
 
         onMounted(() => {
             getEstimatedBus(country.value, routeName.value);
             getBusStop(country.value, routeName.value);
+            getStartEndName(country.value, routeName.value);
         })
 
         return {
@@ -128,7 +146,6 @@ export default {
             country,
             go,
             back,
-            filterData,
             direction,
             goWhere,
             backWhere

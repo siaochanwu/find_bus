@@ -43,12 +43,19 @@ import jsSHA from "jssha";
 export default {
     components: { Nav },
     setup() {
+         interface info {
+            RouteName: {
+                Zh_tw: string,
+                
+            },
+        }
+
         const store = useStore()
 
         const selectCountry = ref('')
         const selectBus = ref('')
         const filter = ref('')
-        const busOptions = ref([])
+        const busOptions = ref<info[]>([])
         const country = ref([
 			{name: "臺中市",value: "Taichung"},
 			{name: "基隆市",value: "Keelung"},

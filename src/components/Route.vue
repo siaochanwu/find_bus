@@ -9,9 +9,9 @@
             </div>
         </div>
         <div class="mt-5 w-12/12 md:w-6/12 flex mx-auto p-3 items-center">
-            <button class="w-6/12 bg-gray-200 text-black p-2 rounded-xl mx-5" @click="direction = 0" :class="{ 'bg-indigo-600 text-white': direction == 0 }">往{{ goWhere }}</button>
+            <button class="w-6/12 bg-gray-200 text-black p-2 rounded-xl mx-5" @click="direction = 0" :class="{ 'bg-indigo-600 text-white': direction == 0 }">往{{ backWhere }}</button>
             <i class="fas fa-arrows-alt-h text-3xl text-gray-400"></i>
-            <button class="w-6/12 bg-gray-200 text-black p-2 rounded-xl mx-5" @click="direction = 1" :class="{ 'bg-indigo-600 text-white': direction == 1 }">往{{ backWhere }}</button>
+            <button class="w-6/12 bg-gray-200 text-black p-2 rounded-xl mx-5" @click="direction = 1" :class="{ 'bg-indigo-600 text-white': direction == 1 }">往{{ goWhere }}</button>
         </div>
         <div v-if="direction == 0" class="">
             <div v-for="item in go" :key="item.StopID" class="w-10/12 md:w-6/12 mx-auto bg-white my-2 p-3 rounded-xl text-left">
@@ -60,6 +60,24 @@ export default {
                 Zh_tw: string
             }
         }
+        interface busTime {
+            Estimates: estimate[]
+            StopUID: string,
+            Direction: number,
+            EstimateTime: number
+        }
+        interface estimate {
+            PlateNumb: string
+        }
+        interface bus {
+            plateNumb: string,
+            stops: stops[]
+        }
+
+        interface stops {
+            estimateTime: number,
+            stopUID: string
+        }
 
         const route = useRoute()
         const store = useStore()
@@ -72,6 +90,9 @@ export default {
         const backWhere = ref('')
         const filterData = ref<info[]>([])
         const direction = ref(0)
+        const busTime = ref<bus[]>([])
+        const goBusTime = ref<bus[]>([])
+        const backBusTime = ref<bus[]>([])
 
         function getAuthorizationHeader() {
             let AppID = import.meta.env.VITE_APP_ID;
@@ -86,16 +107,65 @@ export default {
             return { 'Authorization': Authorization, 'X-Date': GMTString }; 
         }
 
+        //預估到站資料(桃園.台中.高雄only)
         function getEstimatedBus(country:string, routeName:string) {
             fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/${country}/${routeName}?&format=JSON`,{
                 headers: getAuthorizationHeader()
             })
             .then(res => res.json())
             .then(data => {
-                console.log(data)
+                // console.log(data)
+                const estimateData = <busTime[]>data
+                const estimate = estimateData.filter(item => item.Estimates)
+                const goCache = estimate.filter(item => item.Direction == 0)
+                const backCache = estimate.filter(item => item.Direction == 1)
+
+                //找不重複的車牌(去程)
+                goCache.forEach(item => {
+                    const index = goBusTime.value.map(item => item.plateNumb).indexOf(item.Estimates[0].PlateNumb)
+
+                    if(index === -1) {
+                        goBusTime.value.push({
+                            plateNumb: item.Estimates[0].PlateNumb,
+                            stops: [{
+                                estimateTime: item.EstimateTime,
+                                stopUID: item.StopUID
+                            }]
+                        })
+                    } else {
+                        goBusTime.value[index].stops.push({
+                            estimateTime: item.EstimateTime,
+                            stopUID: item.StopUID
+                        })
+                    }
+                })
+                console.log(goBusTime.value)
+
+                //找不重複的車牌(回程)
+                backCache.forEach(item => {
+                    const index = backBusTime.value.map(item => item.plateNumb).indexOf(item.Estimates[0].PlateNumb)
+
+                    if(index === -1) {
+                        backBusTime.value.push({
+                            plateNumb: item.Estimates[0].PlateNumb,
+                            stops: [{
+                                estimateTime: item.EstimateTime,
+                                stopUID: item.StopUID
+                            }]
+                        })
+                    } else {
+                        backBusTime.value[index].stops.push({
+                            estimateTime: item.EstimateTime,
+                            stopUID: item.StopUID
+                        })
+                    }
+                })
+                console.log(backBusTime.value)
             })
         }
 
+
+        //站序data
         function getBusStop(country:string, routeName:string) {
             fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/${country}/${routeName}?&format=JSON`,{
                 headers: getAuthorizationHeader()
@@ -148,7 +218,8 @@ export default {
             back,
             direction,
             goWhere,
-            backWhere
+            backWhere,
+            busTime,
         }
     }
 }

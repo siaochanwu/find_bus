@@ -14,14 +14,21 @@
             <button class="w-6/12 bg-gray-200 text-black p-2 rounded-xl mx-5" @click="direction = 1" :class="{ 'bg-indigo-600 text-white': direction == 1 }">往{{ goWhere }}</button>
         </div>
         <div v-if="direction == 0" class="">
-            <div v-for="item in go" :key="item.StopID" class="w-10/12 md:w-6/12 mx-auto bg-white my-2 p-3 rounded-xl text-left">
-                <span class="bg-yellow-300 px-2 py-1 mx-4 rounded-full">進站中</span>
+            <div v-for="item in goWithTime" :key="item.StopID" class="w-10/12 md:w-6/12 mx-auto bg-white my-2 p-3 rounded-xl text-left">
+                <span v-if="item.EstimateTime == '尚未發車'" class="bg-gray-200 px-3 py-2 mx-4 rounded-full">{{ item.EstimateTime }}</span>
+                <span v-else-if="item.EstimateTime == '進站中'" class="bg-red-500 px-3 py-2 mx-4 rounded-full text-white">{{ item.EstimateTime }}</span>
+                <span v-else-if="item.EstimateTime == '即將進站'" class="bg-yellow-500 px-3 py-2 mx-4 rounded-full text-white">{{ item.EstimateTime }}</span>
+                <span v-else class="bg-yellow-300 px-3 py-2 mx-4 rounded-full">{{ item.EstimateTime }}</span>
                 <span class="font-bold">{{ item.StopName.Zh_tw }}</span>
+                <span class="font-bold">{{ item.StopUID }}</span>
             </div>
         </div>
         <div v-else>
-            <div v-for="item in back" :key="item.StopID" class="w-10/12 md:w-6/12 mx-auto bg-white my-2 p-3 rounded-xl text-left">
-                <span class="bg-yellow-300 px-2 py-1 mx-4 rounded-full">進站中</span>
+            <div v-for="item in backWithTime" :key="item.StopID" class="w-10/12 md:w-6/12 mx-auto bg-white my-2 p-3 rounded-xl text-left">
+                <span v-if="item.EstimateTime == '尚未發車'" class="bg-gray-200 px-3 py-2 mx-4 rounded-full">{{ item.EstimateTime }}</span>
+                <span v-else-if="item.EstimateTime == '進站中'" class="bg-red-500 px-3 py-2 mx-4 rounded-full text-white">{{ item.EstimateTime }}</span>
+                <span v-else-if="item.EstimateTime == '即將進站'" class="bg-yellow-500 px-3 py-2 mx-4 rounded-full text-white">{{ item.EstimateTime }}</span>
+                <span v-else class="bg-yellow-300 px-3 py-2 mx-4 rounded-full">{{ item.EstimateTime }}</span>
                 <span class="font-bold">{{ item.StopName.Zh_tw }}</span>
             </div>
         </div>
@@ -51,7 +58,9 @@ export default {
                 Zh_tw: string
             },
             StopID: string,
-            StationID: string
+            StopUID: string,
+            StationID: string,
+            EstimateTime: number | string
         }
         interface depart {
             DepartureStopNameZh: string,
@@ -93,6 +102,8 @@ export default {
         const busTime = ref<bus[]>([])
         const goBusTime = ref<bus[]>([])
         const backBusTime = ref<bus[]>([])
+        const goWithTime = ref<busStop[]>([])
+        const backWithTime = ref<busStop[]>([])
 
         function getAuthorizationHeader() {
             let AppID = import.meta.env.VITE_APP_ID;
@@ -161,9 +172,10 @@ export default {
                     }
                 })
                 console.log(backBusTime.value)
+
+                match()
             })
         }
-
 
         //站序data
         function getBusStop(country:string, routeName:string) {
@@ -172,7 +184,7 @@ export default {
             })
             .then(res => res.json())
             .then(data => {
-                console.log(data)
+                // console.log(data)
                 const busData = <info[]>data
                 filterData.value = busData.filter(item => item.RouteName.Zh_tw == routeName)
                 filterData.value.forEach(item => {
@@ -205,6 +217,40 @@ export default {
             })
         }
 
+        function match() {
+            //go
+            for (let i = 0; i < go.value.length; i++) {
+                for (let j = 0; j < goBusTime.value.length; j++) {
+                    for (let k = 0; k < goBusTime.value[j].stops.length; k++) {
+                        if (go.value[i].StopUID == goBusTime.value[j].stops[k].stopUID){
+                            go.value[i].EstimateTime = goBusTime.value[j].stops[k].estimateTime / 60 + '分鐘'
+                            if (goBusTime.value[j].stops[k].estimateTime / 60 == 0) {
+                                go.value[i].EstimateTime = '進站中'
+                            } else if (goBusTime.value[j].stops[k].estimateTime / 60 < 3) {
+                                go.value[i].EstimateTime = '即將進站'
+                            }
+                        } else if (!go.value[i].EstimateTime){
+                            go.value[i].EstimateTime = '尚未發車'
+                        }
+                    }
+                }
+                goWithTime.value.push(go.value[i])
+            }
+            //back
+            for (let i = 0; i < back.value.length; i++) {
+                for (let j = 0; j < backBusTime.value.length; j++) {
+                    for (let k = 0; k < backBusTime.value[j].stops.length; k++) {
+                        if (back.value[i].StopUID == backBusTime.value[j].stops[k].stopUID){
+                            back.value[i].EstimateTime = backBusTime.value[j].stops[k].estimateTime / 60 + '分鐘'
+                        } else if (!back.value[i].EstimateTime){
+                            back.value[i].EstimateTime = '尚未發車'
+                        }
+                    }
+                }
+                backWithTime.value.push(back.value[i])
+            }
+        }
+
         onMounted(() => {
             getEstimatedBus(country.value, routeName.value);
             getBusStop(country.value, routeName.value);
@@ -214,12 +260,14 @@ export default {
         return {
             routeName,
             country,
-            go,
-            back,
             direction,
             goWhere,
             backWhere,
             busTime,
+            backBusTime,
+            goBusTime,
+            goWithTime,
+            backWithTime,
         }
     }
 }

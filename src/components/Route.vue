@@ -2,7 +2,9 @@
     <div class="bg-gray-100 w-full">
         <Nav />
         <div class="bg-indigo-600 rounded-b-lg py-3 px-6">
-            <p class="text-left bg-blue-100 text-indigo-600 rounded-full px-2 w-3/12 mb-3">{{ country }}</p>
+            <div class="text-left">
+                <span class="bg-blue-100 text-indigo-600 rounded-full px-2 mb-3">{{ country }}</span>
+            </div>
             <div class="flex justify-between items-baseline">
                 <h1 class="text-white text-3xl font-bold">{{ routeName }}</h1>
                 <div class="text-white text-3xl">
@@ -39,7 +41,22 @@
             </div>
         </div>
 
-        <div v-else-if="type == 'info'">222</div>
+        <div v-else-if="type == 'info'">
+            <div class="bg-white rounded-lg w-12/12 md:w-6/12 mx-auto my-3 p-2 text-left font-bold">
+                <span class="bg-yellow-400 text-indigo-600 rounded-full px-2 py-1">票價</span>
+                <h2 class="my-3">一般:${{ fare[0].ODFares[0].Fares[0].Price }}</h2>
+            </div>
+            <div class="bg-white rounded-lg w-12/12 md:w-6/12 mx-auto my-3 p-2 text-left font-bold">
+                <span class="bg-yellow-400 text-indigo-600 rounded-full px-2 py-1">平日發車資訊</span>
+                <h2 class="my-3">首班車:{{ FirstLast[0].FirstLastTrips[0].FirstTripDepTime }}</h2>
+                <h2>末班車:{{ FirstLast[0].FirstLastTrips[0].LastTripDepTime }}</h2>
+            </div>
+            <div class="bg-white rounded-lg w-12/12 md:w-6/12 mx-auto my-3 p-2 text-left font-bold">
+                <span class="bg-yellow-400 text-indigo-600 rounded-full px-2 py-1">假日發車資訊</span>
+                <h2 class="my-3">首班車:{{ FirstLast[0].FirstLastTrips[1].FirstTripDepTime }}</h2>
+                <h2>末班車:{{ FirstLast[0].FirstLastTrips[1].LastTripDepTime }}</h2>
+            </div>
+        </div>
 
         <div v-else>333</div>
     </div>
@@ -51,6 +68,8 @@ import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import jsSHA from "jssha"
 import Nav from './Nav.vue'
+
+import busInfo from '../use/busInfo'
 
 export default {
     components: { Nav },
@@ -116,6 +135,8 @@ export default {
         const backWithTime = ref<busStop[]>([])
         const type = ref('pin')
 
+        const { FirstLast, fare } = busInfo(country.value, routeName.value)
+
         function getAuthorizationHeader() {
             let AppID = import.meta.env.VITE_APP_ID;
             let AppKey: any = import.meta.env.VITE_APP_KEY;
@@ -161,7 +182,7 @@ export default {
                         })
                     }
                 })
-                console.log(goBusTime.value)
+                // console.log(goBusTime.value)
 
                 //找不重複的車牌(回程)
                 backCache.forEach(item => {
@@ -182,7 +203,7 @@ export default {
                         })
                     }
                 })
-                console.log(backBusTime.value)
+                // console.log(backBusTime.value)
 
                 match()
             })
@@ -279,7 +300,9 @@ export default {
             goBusTime,
             goWithTime,
             backWithTime,
-            type
+            type,
+            FirstLast,
+            fare
         }
     },
 }

@@ -8,7 +8,7 @@
             <ul class="hidden md:flex md:flex-row md:items-center" id="mobileMenu">
                 <li class="bg-indigo-600 text-white p-3 md:mr-5 md:bg-transparent md:text-indigo-600 font-bold text-xl"><a href="">附近站牌</a></li>
                 <li class="bg-indigo-600 text-white p-3 md:mr-5 md:bg-transparent md:text-indigo-600 font-bold text-xl"><a href="">轉乘規劃</a></li>
-                <li class="bg-indigo-600 text-white p-3  md:px-2 md:py-1 md:mr-5 md:bg-transparent md:bg-indigo-600 font-bold text-xl rounded-full"><a href=""><i class="fas fa-search"></i>找公車</a></li>
+                <li class="bg-indigo-600 text-white p-3  md:px-2 md:py-1 md:mr-5 md:bg-transparent md:bg-indigo-600 font-bold text-xl md:rounded-full"><a href=""><i class="fas fa-search"></i>找公車</a></li>
             </ul>
         </nav>
     </div>

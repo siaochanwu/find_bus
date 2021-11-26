@@ -19,8 +19,8 @@
                 </div>
             </div>
             
-            <div class="shadow-lg rounded-xl bg-white w-11/12 md:w-5/12 mx-auto p-5">
-                <div class="flex flex-wrap mt-5 justify-center h-80 overflow-y-scroll" v-if="radio == 'route'">
+            <div class="shadow-lg rounded-xl bg-white w-11/12 md:w-5/12 mx-auto">
+                <div class="flex flex-wrap mt-5 p-5 justify-center h-80 overflow-y-auto" v-show="radio == 'route' && searchBus.length > 0">
                     <div class="w-4/12 md:w-3/12" v-for="item in searchBus" :key="item.RouteName.Zh_tw">
                         <router-link :to="`/route/${item.RouteName.Zh_tw}`">
                             <div class="m-3 p-2 text-white bg-indigo-600 rounded-xl">
@@ -29,7 +29,6 @@
                         </router-link>
                     </div>
                 </div>
-                <div v-else>123</div>
             </div>
                 
             

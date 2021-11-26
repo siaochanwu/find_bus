@@ -3,33 +3,36 @@
         <Nav />
         <div>
             <h1 class="my-5 text-indigo-600 text-3xl font-black">找公車</h1>
-            <div class="shadow-lg rounded-xl bg-white w-11/12 md:w-5/12 mx-auto p-5 text-indigo-700 font-bold">
+            <div class="shadow-lg rounded-xl bg-white w-11/12 md:w-5/12 mx-auto p-5 text-indigo-700 font-bold mb-3">
                 <div class="">
-                    <input type="radio" name="function" value="route" id="" class="mx-2">查路線
-                    <input type="radio" name="function" value="step" id="" class="mx-2">查站牌
+                    <input type="radio" name="radio" value="route" id="" class="mx-2" checked @click="radio = 'route'">查路線
+                    <input type="radio" name="radio" value="step" id="" class="mx-2" @click="radio = 'step'">查站牌
                 </div>
-                
-                <div class="">
-                    <div class="my-3">
-                        <select name="" id="select" class="w-full p-3 rounded-lg bg-gray-100" v-model="selectCountry">
-                            <option value="" disabled>縣市</option>
-                            <option :value="item.value" v-for="item in country" :key="item.value">{{ item.name }}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input class="w-full p-2 rounded-lg bg-gray-100" type="text" placeholder="搜尋" v-model="filter">
-                    </div>
+                <div class="my-3">
+                    <select name="" id="select" class="w-full p-3 rounded-lg bg-gray-100" v-model="selectCountry">
+                        <option value="" disabled>縣市</option>
+                        <option :value="item.value" v-for="item in country" :key="item.value">{{ item.name }}</option>
+                    </select>
                 </div>
-                <div class="flex flex-wrap mt-5 justify-center">
-                    
-                    <div class="w-3/12 m-3 p-2 bg-yellow-500 rounded-xl" v-for="item in searchBus" :key="item.RouteName.Zh_tw">
-                        <router-link :to="`/route/${item.RouteName.Zh_tw}`">
-                        {{ item.RouteName.Zh_tw}}
-                        </router-link>
-                    </div>
-                  
+                <div>
+                    <input class="w-full p-2 rounded-lg bg-gray-100" type="text" placeholder="搜尋" v-model="filter">
                 </div>
             </div>
+            
+            <div class="shadow-lg rounded-xl bg-white w-11/12 md:w-5/12 mx-auto p-5">
+                <div class="flex flex-wrap mt-5 justify-center h-80 overflow-y-scroll" v-if="radio == 'route'">
+                    <div class="w-4/12 md:w-3/12" v-for="item in searchBus" :key="item.RouteName.Zh_tw">
+                        <router-link :to="`/route/${item.RouteName.Zh_tw}`">
+                            <div class="m-3 p-2 text-white bg-indigo-600 rounded-xl">
+                                {{ item.RouteName.Zh_tw}}
+                            </div>
+                        </router-link>
+                    </div>
+                </div>
+                <div v-else>123</div>
+            </div>
+                
+            
         </div>
     </div>
 </template>
@@ -55,6 +58,7 @@ export default {
         const selectCountry = ref('')
         const selectBus = ref('')
         const filter = ref('')
+        const radio = ref('route')
         const busOptions = ref<info[]>([])
         const country = ref([
 			{name: "臺中市",value: "Taichung"},
@@ -124,6 +128,7 @@ export default {
             searchBus,
             busOptions,
             country,
+            radio,
             getCityBus
         };
     },

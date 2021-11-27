@@ -8,9 +8,9 @@
             <div class="flex justify-between items-baseline">
                 <h1 class="text-white text-3xl font-bold">{{ routeName }}</h1>
                 <div class="text-white text-3xl">
-                    <i class="fas fa-map-pin mx-2" @click="type = 'pin'"></i>
-                    <i class="fas fa-info-circle mx-2" @click="type = 'info'"></i>
-                    <i class="far fa-map mx-2" @click="type = 'map'"></i>
+                    <button><i class="fas fa-map-pin mx-2" @click="type = 'pin'"></i></button>
+                    <button><i class="fas fa-info-circle mx-2" @click="type = 'info'"></i></button>
+                    <button><i class="far fa-map mx-2" @click="type = 'map'"></i></button>
                 </div>
             </div>
         </div>
@@ -58,7 +58,8 @@
             </div>
         </div>
 
-        <div v-else>333</div>
+        <div v-else id="map" class="h-40">
+        </div>
     </div>
 </template>
 
@@ -68,20 +69,15 @@ import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import jsSHA from "jssha"
 import Nav from './Nav.vue'
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 import busInfo from '../use/busInfo'
+import realtime from '../use/realtime'
 
 export default {
     components: { Nav },
     setup() {
-        interface info {
-            RouteName: {
-                Zh_tw: string,
-                
-            },
-            Direction: number,
-            Stops: busStop[]
-        }
         interface busStop {
             StopName: {
                 Zh_tw: string
@@ -90,13 +86,6 @@ export default {
             StopUID: string,
             StationID: string,
             EstimateTime: number | string
-        }
-        interface depart {
-            DepartureStopNameZh: string,
-            DestinationStopNameZh: string,
-            RouteName: {
-                Zh_tw: string
-            }
         }
         interface busTime {
             Estimates: estimate[]
@@ -111,7 +100,6 @@ export default {
             plateNumb: string,
             stops: stops[]
         }
-
         interface stops {
             estimateTime: number,
             stopUID: string
@@ -122,20 +110,15 @@ export default {
 
         const routeName = ref<any>(route.params.routeName)
         const country = ref(store.state.country)
-        const go = ref<busStop[]>([])
-        const goWhere = ref('')
-        const back = ref<busStop[]>([])
-        const backWhere = ref('')
-        const filterData = ref<info[]>([])
         const direction = ref(0)
         const busTime = ref<bus[]>([])
-        const goBusTime = ref<bus[]>([])
-        const backBusTime = ref<bus[]>([])
         const goWithTime = ref<busStop[]>([])
         const backWithTime = ref<busStop[]>([])
         const type = ref('pin')
+        let map = ref(null)
 
         const { FirstLast, fare } = busInfo(country.value, routeName.value)
+        const { go, back, goWhere, backWhere, goBusTime, backBusTime } = realtime(country.value, routeName.value)
 
         function getAuthorizationHeader() {
             let AppID = import.meta.env.VITE_APP_ID;
@@ -209,46 +192,6 @@ export default {
             })
         }
 
-        //站序data
-        function getBusStop(country:string, routeName:string) {
-            fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/${country}/${routeName}?&format=JSON`,{
-                headers: getAuthorizationHeader()
-            })
-            .then(res => res.json())
-            .then(data => {
-                // console.log(data)
-                const busData = <info[]>data
-                filterData.value = busData.filter(item => item.RouteName.Zh_tw == routeName)
-                filterData.value.forEach(item => {
-                    //0:去程 1:返程
-                    if (item.Direction == 0) {
-                        for (let i = 0; i < item.Stops.length; i++) {
-                            go.value.push(item.Stops[i])
-                        }
-                    } else {
-                        for (let i = 0; i < item.Stops.length; i++) {
-                            back.value.push(item.Stops[i])
-                        }
-                    }
-                })
-            })
-        }
-
-        //取得起始站名
-        function getStartEndName(country:string, routeName:string) {
-            fetch(`https://ptx.transportdata.tw/MOTC/v2/Bus/Route/City/${country}/${routeName}?&format=JSON`,{
-                headers: getAuthorizationHeader()
-            })
-            .then(res => res.json())
-            .then(data => {
-                // console.log(data)
-                const busData = <depart[]>data
-                const departData = busData.filter(item => item.RouteName.Zh_tw == routeName)
-                goWhere.value = departData[0].DepartureStopNameZh
-                backWhere.value = departData[0].DestinationStopNameZh
-            })
-        }
-
         function match() {
             //go
             for (let i = 0; i < go.value.length; i++) {
@@ -283,10 +226,21 @@ export default {
             }
         }
 
+
+        // map = L.map('map').setView([51.505, -0.09], 13);
+        // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        //     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        //     maxZoom: 18,
+        //     id: 'mapbox/streets-v11',
+        //     tileSize: 512,
+        //     zoomOffset: -1,
+        //     accessToken: import.meta.env.VITE_APP_ACCESSTOKEN
+        // }).addTo(map);
+        
+
+
         onMounted(() => {
             getEstimatedBus(country.value, routeName.value);
-            getBusStop(country.value, routeName.value);
-            getStartEndName(country.value, routeName.value);
         })
 
         return {
@@ -302,7 +256,7 @@ export default {
             backWithTime,
             type,
             FirstLast,
-            fare
+            fare,
         }
     },
 }

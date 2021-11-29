@@ -18,7 +18,7 @@ export default function realtime(selectCountry, selectBus) {
         StopUID: string,
         StationID: string,
         EstimateTime: number | string,
-        [propName: string]: any; //允許有任意屬性
+        [propName: string]: any, //允許有任意屬性
     }
     
     function getAuthorizationHeader() {

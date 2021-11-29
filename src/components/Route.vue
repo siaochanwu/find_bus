@@ -35,6 +35,7 @@
                     <span v-if="item.EstimateTime == '尚未發車'" class="bg-gray-200 px-3 py-2 mx-4 rounded-full">{{ item.EstimateTime }}</span>
                     <span v-else-if="item.EstimateTime == '進站中'" class="bg-red-500 px-3 py-2 mx-4 rounded-full text-white">{{ item.EstimateTime }}</span>
                     <span v-else-if="item.EstimateTime == '即將進站'" class="bg-yellow-500 px-3 py-2 mx-4 rounded-full text-white">{{ item.EstimateTime }}</span>
+                    <span v-else-if="item.EstimateTime == null" class="bg-gray-100 px-3 py-2 mx-4 rounded-full">末班駛離</span>
                     <span v-else class="bg-green-300 px-3 py-2 mx-4 rounded-full">{{ item.EstimateTime }}</span>
                     <span class="font-bold">{{ item.StopName.Zh_tw }}</span>
                 </div>
@@ -197,6 +198,7 @@ export default {
             //go
             for (let i = 0; i < go.value.length; i++) {
                 for (let j = 0; j < goBusTime.value.length; j++) {
+                    console.log(goBusTime.value[j])
                     for (let k = 0; k < goBusTime.value[j].stops.length; k++) {
                         if (go.value[i].StopUID == goBusTime.value[j].stops[k].stopUID){
                             go.value[i].EstimateTime = goBusTime.value[j].stops[k].estimateTime / 60 + '分鐘'
@@ -206,6 +208,8 @@ export default {
                                 go.value[i].EstimateTime = '即將進站'
                             }
                         } else if (!go.value[i].EstimateTime){
+                            go.value[i].EstimateTime = '尚未發車'
+                        } else {
                             go.value[i].EstimateTime = '尚未發車'
                         }
                     }
@@ -237,23 +241,11 @@ export default {
 
         function getLocation() {
             map = L.map('map').setView([0, 0], 15)
-            L.tileLayer(
-                "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
-                {
-                    attribution:
-                        'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                    maxZoom: 18,
-                    id: "mapbox/streets-v11",
-                    tileSize: 512,
-                    zoomOffset: -1,
-                    accessToken: import.meta.env.VITE_APP_ACCESSTOKEN,
-                }
-            ).addTo(map);
 		}
         
         function setMarkers() {
             map.remove()
-            map = L.map('map').setView([go.value[0].StopPosition.PositionLat, go.value[0].StopPosition.PositionLon], 15);
+            map = L.map('map').setView([go.value[10].StopPosition.PositionLat, go.value[10].StopPosition.PositionLon], 13);
             L.tileLayer(
                 "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
                 {
@@ -270,7 +262,7 @@ export default {
             markers = L.layerGroup().addTo(map)
             let marker;
             var myIcon = L.icon({ //修改marker樣式
-				iconUrl: 'https://static.thenounproject.com/png/852651-200.png',
+				iconUrl: 'https://i.pinimg.com/originals/0f/61/ba/0f61ba72e0e12ba59d30a50295964871.png',
 				iconSize: [38, 95],
 				iconAnchor: [22, 94],
 				popupAnchor: [-3, -76],

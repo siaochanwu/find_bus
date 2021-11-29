@@ -236,45 +236,36 @@ export default {
         }
 
         function getLocation() {
-            // map = L.map('map').setView([0, 0], 15)
-			if (navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(
-					function (position) {
-						const lng = position.coords.longitude; //經度
-						const lat = position.coords.latitude; //緯度
-						// map = L.map('map').setView([lat, lng], 15);
-
-						L.tileLayer(
-							"https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
-							{
-								attribution:
-									'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-								maxZoom: 18,
-								id: "mapbox/streets-v11",
-								tileSize: 512,
-								zoomOffset: -1,
-								accessToken: import.meta.env.VITE_APP_ACCESSTOKEN,
-							}
-						).addTo(map);
-						let marker = L.marker([lat, lng]).addTo(map);
-						marker.bindPopup('<b>You are here!</b>')
-					},
-					function (e) {
-						const msg = e.code
-						const dd = e.message
-						console.error(msg)
-						console.error(dd)
-					}
-				)
-			} else {
-				map.setView([25.0320923, 121.5680546], 15);
-			}
+            map = L.map('map').setView([0, 0], 15)
+            L.tileLayer(
+                "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+                {
+                    attribution:
+                        'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    id: "mapbox/streets-v11",
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    accessToken: import.meta.env.VITE_APP_ACCESSTOKEN,
+                }
+            ).addTo(map);
 		}
         
         function setMarkers() {
-            
-            console.log(go.value[0].StopPosition.PositionLat, go.value[0].StopPosition.PositionLon)
+            map.remove()
             map = L.map('map').setView([go.value[0].StopPosition.PositionLat, go.value[0].StopPosition.PositionLon], 15);
+            L.tileLayer(
+                "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+                {
+                    attribution:
+                        'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    id: "mapbox/streets-v11",
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    accessToken: import.meta.env.VITE_APP_ACCESSTOKEN,
+                }
+            ).addTo(map);
             map.removeLayer(markers)
             markers = L.layerGroup().addTo(map)
             let marker;
@@ -283,7 +274,6 @@ export default {
 				iconSize: [38, 95],
 				iconAnchor: [22, 94],
 				popupAnchor: [-3, -76],
-				// shadowUrl: 'my-icon-shadow.png',
 				shadowSize: [68, 95],
 				shadowAnchor: [22, 94]
 			});
@@ -294,7 +284,6 @@ export default {
             })
             map.addLayer(markers)
         }
-
 
         onMounted(() => {
             getEstimatedBus(country.value, routeName.value);

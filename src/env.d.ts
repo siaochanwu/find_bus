@@ -6,3 +6,10 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+interface ImportMetaEnv {
+  VITE_APP_ACCESSTOKEN: string;
+  VITE_APP_ID: string;
+  VITE_APP_KEY: string;
+  // more env variables...
+}

@@ -8,7 +8,7 @@ export default function realtime(selectCountry, selectBus) {
             
         },
         Direction: number,
-        Stops: busStop[]
+        Stops: busStop[],
     }
     interface busStop {
         StopName: {
@@ -17,7 +17,8 @@ export default function realtime(selectCountry, selectBus) {
         StopID: string,
         StopUID: string,
         StationID: string,
-        EstimateTime: number | string
+        EstimateTime: number | string,
+        [propName: string]: any; //允許有任意屬性
     }
     
     function getAuthorizationHeader() {

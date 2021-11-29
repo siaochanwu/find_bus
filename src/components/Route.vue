@@ -10,7 +10,7 @@
                 <div class="text-white text-3xl">
                     <button><i class="fas fa-map-pin mx-2" @click="type = 'pin'"></i></button>
                     <button><i class="fas fa-info-circle mx-2" @click="type = 'info'"></i></button>
-                    <button><i class="far fa-map mx-2" @click="type = 'map'"></i></button>
+                    <button><i class="far fa-map mx-2" @click="changeType('map')"></i></button>
                 </div>
             </div>
         </div>
@@ -58,8 +58,8 @@
             </div>
         </div>
 
-        <div v-else id="map" class="h-40">
-        </div>
+        <div v-show="type=='map'" id="map" class="h-screen"></div>
+
     </div>
 </template>
 
@@ -69,8 +69,8 @@ import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import jsSHA from "jssha"
 import Nav from './Nav.vue'
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
 
 import busInfo from '../use/busInfo'
 import realtime from '../use/realtime'
@@ -85,7 +85,7 @@ export default {
             StopID: string,
             StopUID: string,
             StationID: string,
-            EstimateTime: number | string
+            EstimateTime: number | string,
         }
         interface busTime {
             Estimates: estimate[]
@@ -115,7 +115,8 @@ export default {
         const goWithTime = ref<busStop[]>([])
         const backWithTime = ref<busStop[]>([])
         const type = ref('pin')
-        let map = ref(null)
+        let map = ref<any>('')
+		let markers = ref<any>(null)
 
         const { FirstLast, fare } = busInfo(country.value, routeName.value)
         const { go, back, goWhere, backWhere, goBusTime, backBusTime } = realtime(country.value, routeName.value)
@@ -224,23 +225,80 @@ export default {
                 }
                 backWithTime.value.push(back.value[i])
             }
+            
         }
 
+        function changeType (item: string) {
+            type.value = item
+            if (type.value == 'map') {
+                setMarkers()
+            }
+        }
 
-        // map = L.map('map').setView([51.505, -0.09], 13);
-        // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-        //     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        //     maxZoom: 18,
-        //     id: 'mapbox/streets-v11',
-        //     tileSize: 512,
-        //     zoomOffset: -1,
-        //     accessToken: import.meta.env.VITE_APP_ACCESSTOKEN
-        // }).addTo(map);
+        function getLocation() {
+            // map = L.map('map').setView([0, 0], 15)
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					function (position) {
+						const lng = position.coords.longitude; //經度
+						const lat = position.coords.latitude; //緯度
+						// map = L.map('map').setView([lat, lng], 15);
+
+						L.tileLayer(
+							"https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
+							{
+								attribution:
+									'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+								maxZoom: 18,
+								id: "mapbox/streets-v11",
+								tileSize: 512,
+								zoomOffset: -1,
+								accessToken: import.meta.env.VITE_APP_ACCESSTOKEN,
+							}
+						).addTo(map);
+						let marker = L.marker([lat, lng]).addTo(map);
+						marker.bindPopup('<b>You are here!</b>')
+					},
+					function (e) {
+						const msg = e.code
+						const dd = e.message
+						console.error(msg)
+						console.error(dd)
+					}
+				)
+			} else {
+				map.setView([25.0320923, 121.5680546], 15);
+			}
+		}
         
+        function setMarkers() {
+            
+            console.log(go.value[0].StopPosition.PositionLat, go.value[0].StopPosition.PositionLon)
+            map = L.map('map').setView([go.value[0].StopPosition.PositionLat, go.value[0].StopPosition.PositionLon], 15);
+            map.removeLayer(markers)
+            markers = L.layerGroup().addTo(map)
+            let marker;
+            var myIcon = L.icon({ //修改marker樣式
+				iconUrl: 'https://static.thenounproject.com/png/852651-200.png',
+				iconSize: [38, 95],
+				iconAnchor: [22, 94],
+				popupAnchor: [-3, -76],
+				// shadowUrl: 'my-icon-shadow.png',
+				shadowSize: [68, 95],
+				shadowAnchor: [22, 94]
+			});
+            go.value.forEach(item => {
+                marker = L.marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {icon: myIcon}).addTo(markers)
+                marker.bindPopup(`<b>${item.StopName.Zh_tw}</b>`)
+                markers.addLayer(marker)
+            })
+            map.addLayer(markers)
+        }
 
 
         onMounted(() => {
             getEstimatedBus(country.value, routeName.value);
+            getLocation()
         })
 
         return {
@@ -257,6 +315,8 @@ export default {
             type,
             FirstLast,
             fare,
+            go,
+            changeType
         }
     },
 }

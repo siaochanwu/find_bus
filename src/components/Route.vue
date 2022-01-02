@@ -64,7 +64,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
@@ -76,9 +76,6 @@ import L from "leaflet"
 import busInfo from '../use/busInfo'
 import realtime from '../use/realtime'
 
-export default {
-    components: { Nav },
-    setup() {
         interface busStop {
             StopName: {
                 Zh_tw: string
@@ -281,25 +278,4 @@ export default {
             getEstimatedBus(country.value, routeName.value);
             getLocation()
         })
-
-        return {
-            routeName,
-            country,
-            direction,
-            goWhere,
-            backWhere,
-            busTime,
-            backBusTime,
-            goBusTime,
-            goWithTime,
-            backWithTime,
-            type,
-            FirstLast,
-            fare,
-            go,
-            changeType
-        }
-    },
-}
-
 </script>
